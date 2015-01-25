@@ -10,7 +10,9 @@ AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 
 # Fixing file creation time
 find ${srcdir} -name aclocal.m4 -exec touch {} \;
-find ${srcdir} -name Makefile.in -exec touch {} \;
+find ${srcdir} -name \*.in -exec touch {} \;
+find ${srcdir} -name configure -exec touch {} \;
+
 
 
 # Checks for programs.
