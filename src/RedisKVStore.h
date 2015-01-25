@@ -35,6 +35,8 @@ namespace YiCppLib {
 			void addStringValueToSet(const std::string& value, const std::string& key);
 			void addStringValueToSetInNamespace(const std::string& value, const std::string& key, const std::string& ns);
 			std::vector<std::string> stringSetValueForKey(const std::string& key) const;
+			std::vector<std::string> stringSetValueForKeyInNamespace(const std::string& key, const std::string& ns) const;
+
 			
 		protected:
 			RedisKVStore(const std::string& ip, int port);

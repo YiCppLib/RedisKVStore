@@ -156,3 +156,7 @@ std::vector<std::string> RedisKVStore::stringSetValueForKey(const std::string& k
 	}
 	return result;
 }
+
+std::vector<std::string> RedisKVStore::stringSetValueForKeyInNamespace(const std::string& key, const std::string& ns) const{
+	return stringSetValueForKey(ns != "" ? ns + ":" + key : key);
+}
