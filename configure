@@ -2861,6 +2861,11 @@ END
   fi
 fi
 
+# Fixing file creation time
+find ${srcdir} -name aclocal.m4 -exec touch {} \;
+find ${srcdir} -name Makefile.in -exec touch {} \;
+
+
 # Checks for programs.
 ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
