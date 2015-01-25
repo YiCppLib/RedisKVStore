@@ -20,7 +20,7 @@ AC_PROG_CXX
 AC_PROG_CC
 AM_PROG_AR
 LT_PREREQ([2.2])
-LT_INIT()
+LT_INIT([disable-shared])
 AC_LANG([C++])
 AX_CXX_COMPILE_STDCXX_11([noext], [mandatory])
 

@@ -1,5 +1,5 @@
 #include "RedisKVStore.h"
-#include <hiredis/hiredis.h>
+#include "hiredis.h"
 
 #include "log.h"
 
@@ -38,7 +38,11 @@ class ConcreteRedisKVStore : public RedisKVStore {
 		{}
 };
 
-static auto logger = LOGGER(LOGLV_DEBUG);
+#ifndef LOGLVL
+#define LOGLVL LOGLV_WARN
+#endif
+
+static auto logger = LOGGER(LOGLVL);
 
 RedisKVStore::RedisKVStore(const std::string& ip, int port) :
 	pImpl_(new Impl()) 
