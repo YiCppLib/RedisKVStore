@@ -9,6 +9,24 @@ struct RedisKVStore::Impl {
 	redisContext * rCtx;
 };
 
+class RedisKVStore::RedisReply {
+	private:
+		redisReply * reply_;
+
+	public:
+		RedisReply() : reply_(nullptr) {}
+		RedisReply(redisReply *reply) : reply_(reply) {}
+
+		~RedisReply() {
+			if(reply_) freeReplyObject(reply_);
+		}
+
+		std::string str() const noexcept { return std::string(reply_->str);}
+		int type() const noexcept { return reply_->type;}
+		size_t elements() const noexcept { return reply_->elements;}
+		const redisReply * elementAt(size_t idx) const noexcept { return reply_->element[idx];}
+};
+
 class ConcreteRedisKVStore : public RedisKVStore {
 	public:
 		ConcreteRedisKVStore(const std::string&ip, int port) 
@@ -78,19 +96,63 @@ RedisKVStore::pointer RedisKVStore::redisKVStore(const std::string& unixPath) {
 #endif
 }
 
-void RedisKVStore::setStringValueForKey(const std::string& value, const std::string& key) {
-	logger(LOGLV_INFO)<<"Setting "<<value<<" for key "<<key<<std::endl;
-	auto reply = (redisReply*)redisCommand(pImpl_->rCtx, "SET key:%s %s", key.c_str(), value.c_str());
+RedisKVStore::reply_ptr RedisKVStore::redisCommand_1arg(const std::string& cmd, const std::string& format, const std::string& arg) const {
+	logger(LOGLV_INFO)<<"EXEC: ["<<cmd<<"], ("<<format<<"), "<<arg<<std::endl;
+	auto reply = (redisReply*)redisCommand(pImpl_->rCtx, (cmd + " " + format).c_str(), arg.c_str());
 	logger(LOGLV_INFO)<<"Respond: "<<reply->type<<std::endl;
-	freeReplyObject(reply);
+
+#ifdef HAVE_CXX14
+	return std::make_unique<RedisReply>(reply);
+#else
+	return reply_ptr(new RedisReply(reply));
+#endif
 }
 
-std::string RedisKVStore::stringValueForKey(const std::string& key) {
-	logger(LOGLV_INFO)<<"Retriving value for key "<<key<<std::endl;
-	auto reply = (redisReply*)redisCommand(pImpl_->rCtx, "GET key:%s", key.c_str());
-	logger(LOGLV_INFO)<<"Respond Type: "<<reply->type<<std::endl;
-	std::string value(reply->str);
-	logger(LOGLV_INFO)<<"Respond Value: "<<value<<std::endl;
-	freeReplyObject(reply);
-	return value;
+
+RedisKVStore::reply_ptr RedisKVStore::redisCommand_2arg(const std::string& cmd, const std::string& format, const std::string& arg1, const std::string& arg2) {
+	logger(LOGLV_INFO)<<"EXEC: ["<<cmd<<"], ("<<format<<"), "<<arg1<<", "<<arg2<<std::endl;
+	auto reply = (redisReply*)redisCommand(pImpl_->rCtx, (cmd + " " + format).c_str(), arg1.c_str(), arg2.c_str());
+	logger(LOGLV_INFO)<<"Respond: "<<reply->type<<std::endl;
+
+#ifdef HAVE_CXX14
+	return std::make_unique<RedisReply>(reply);
+#else
+	return reply_ptr(new RedisReply(reply));
+#endif
+}
+
+std::string RedisKVStore::stringValueForKey(const std::string& key) const noexcept{
+	return std::string(redisCommand_1arg("GET", "%s", key)->str());
+}
+
+void RedisKVStore::setStringValueForKey(const std::string& value, const std::string& key) {
+	redisCommand_2arg("SET", "%s %s", key, value);
+}
+
+void RedisKVStore::setStringValueForKeyInNamespace(const std::string& value, const std::string& key, const std::string& ns) noexcept {
+	setStringValueForKey(value, ns != "" ? ns + ":" + key : key);
+}
+
+std::string RedisKVStore::stringValueForKeyInNamespace(const std::string& key, const std::string& ns) const noexcept{
+	return stringValueForKey(ns != "" ? ns + ":" + key : key);
+}
+
+/* ordered-set value operations */
+void RedisKVStore::addStringValueToSet(const std::string& value, const std::string& key) {
+	redisCommand_2arg("SADD", "%s %s", key, value);
+}
+
+void RedisKVStore::addStringValueToSetInNamespace(const std::string& value, const std::string& key, const std::string& ns) {
+	addStringValueToSet(value, ns != "" ? ns + ":" + key : key);
+}
+
+std::vector<std::string> RedisKVStore::stringSetValueForKey(const std::string& key) const{
+	auto reply = redisCommand_1arg("SMEMBERS", "%s", key);
+	std::vector<std::string> result;
+	if(reply->type() != REDIS_REPLY_ARRAY) throw new std::runtime_error("Reply type is not array");
+	logger(LOGLV_INFO)<<"returned array has a size of "<<reply->elements()<<std::endl;
+	for(size_t i=0; i<reply->elements(); i++) {
+		result.push_back(std::string(reply->elementAt(i)->str));
+	}
+	return result;
 }
