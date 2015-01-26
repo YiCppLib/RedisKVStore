@@ -25,25 +25,24 @@ namespace YiCppLib {
 			static pointer redisKVStore(const std::string& ip, int port);
 			static pointer redisKVStore(const std::string& unixPath);
 
+			/* remove key */
+			void removeKeyInNamespace(const std::string& key, const std::string& ns = "") const noexcept;
+
 			/* string value operations */
-			std::string stringValueForKey(const std::string& key) const noexcept;
-			void setStringValueForKey(const std::string& value, const std::string& key);
-			void setStringValueForKeyInNamespace(const std::string& value, const std::string& key, const std::string& ns) noexcept;
-			std::string stringValueForKeyInNamespace(const std::string& key, const std::string& ns) const noexcept;
+			void setStringValueForKeyInNamespace(const std::string& value, const std::string& key, const std::string& ns = "") const noexcept;
+			std::string stringValueForKeyInNamespace(const std::string& key, const std::string& ns = "") const noexcept;
 
 			/* ordered-set value operations */
-			void addStringValueToSet(const std::string& value, const std::string& key);
-			void addStringValueToSetInNamespace(const std::string& value, const std::string& key, const std::string& ns);
-			std::vector<std::string> stringSetValueForKey(const std::string& key) const;
-			std::vector<std::string> stringSetValueForKeyInNamespace(const std::string& key, const std::string& ns) const;
+			void addStringValueToSetInNamespace(const std::string& value, const std::string& key, const std::string& ns = "")const noexcept;
+			std::vector<std::string> stringSetValueForKeyInNamespace(const std::string& key, const std::string& ns = "") const noexcept;
 
 			
-		protected:
+		private:
 			RedisKVStore(const std::string& ip, int port);
 			RedisKVStore(const std::string& unixPath);
 
-			reply_ptr redisCommand_1arg(const std::string& cmd, const std::string& format, const std::string& arg) const;
-			reply_ptr redisCommand_2arg(const std::string& cmd, const std::string& format, const std::string& arg1, const std::string& arg2);
+			template<typename ... Types>
+			reply_ptr redisCommand(const std::string& cmd, const std::string& format, Types ... args) const noexcept;
 
 	};
 }
