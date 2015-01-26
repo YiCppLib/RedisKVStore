@@ -26,21 +26,21 @@ namespace YiCppLib {
 			RedisKVStore(const std::string& unixPath);
 
 			/* remove key */
-			void removeKeyInNamespace(const std::string& key, const std::string& ns = "") const noexcept;
+			void removeKeyInNamespace(const std::string& key, const std::string& ns = "") const ;
 
 			/* string value operations */
-			void setStringValueForKeyInNamespace(const std::string& value, const std::string& key, const std::string& ns = "") const noexcept;
-			std::string stringValueForKeyInNamespace(const std::string& key, const std::string& ns = "") const noexcept;
+			void setStringValueForKeyInNamespace(const std::string& value, const std::string& key, const std::string& ns = "") const ;
+			std::string stringValueForKeyInNamespace(const std::string& key, const std::string& ns = "") const ;
 
 			/* ordered-set value operations */
-			void addStringValueToSetInNamespace(const std::string& value, const std::string& key, const std::string& ns = "")const noexcept;
-			std::vector<std::string> stringSetValueForKeyInNamespace(const std::string& key, const std::string& ns = "") const noexcept;
+			void addStringValueToSetInNamespace(const std::string& value, const std::string& key, const std::string& ns = "")const ;
+			std::vector<std::string> stringSetValueForKeyInNamespace(const std::string& key, const std::string& ns = "") const ;
 
 			
 		private:
 			
 			template<typename ... Types>
-			reply_ptr redisCommand(const std::string& cmd, const std::string& format, Types ... args) const noexcept;
+			reply_ptr redisCommand(const std::string& cmd, const std::string& format, Types ... args) const;
 
 	};
 }

@@ -1,5 +1,7 @@
 #include "RedisKVStore.h"
 #include "hiredis.h"
+#include <stdexcept>
+#include <sstream>
 
 #include "log.h"
 
@@ -12,6 +14,15 @@ using namespace YiCppLib;
 #endif
 
 #define KEY_WITH_NS(key, ns) ((ns) == "" ? (key) : (ns + ":" + key))
+
+#define CHECK_REPLY_STATUS(reply, expected) \
+{ \
+	if((reply)->type() != (expected)) { \
+		std::stringstream errMsg; \
+		errMsg<<"Reply status error in "<<__func__<<", expecting "<<(expected)<<"; got "<<reply->type(); \
+		throw std::runtime_error(errMsg.str()); \
+	} \
+}
 
 #ifndef LOGLVL
 #define LOGLVL LOGLV_WARN
@@ -83,7 +94,7 @@ RedisKVStore::RedisKVStore(RedisKVStore&& rhs) = default;
 RedisKVStore& RedisKVStore::operator=(RedisKVStore&& rhs) = default;
 
 template<typename ... Types>
-RedisKVStore::reply_ptr RedisKVStore::redisCommand(const std::string& cmd, const std::string& format, Types ... args) const noexcept {
+RedisKVStore::reply_ptr RedisKVStore::redisCommand(const std::string& cmd, const std::string& format, Types ... args) const {
 
 	//logger(LOGLV_INFO)<<"EXEC: ["<<cmd<<"], ("<<format<<"), "<<args...<<std::endl;
 	
@@ -93,27 +104,33 @@ RedisKVStore::reply_ptr RedisKVStore::redisCommand(const std::string& cmd, const
 	RETURN_REPLY_OBJECT(reply);
 }
 
-void RedisKVStore::removeKeyInNamespace(const std::string& key, const std::string& ns) const noexcept {
-	redisCommand("DEL", "%s", KEY_WITH_NS(key, ns).c_str());
+void RedisKVStore::removeKeyInNamespace(const std::string& key, const std::string& ns) const {
+	auto reply = redisCommand("DEL", "%s", KEY_WITH_NS(key, ns).c_str());
+	CHECK_REPLY_STATUS(reply, REDIS_REPLY_INTEGER);
 }
 
-void RedisKVStore::setStringValueForKeyInNamespace(const std::string& value, const std::string& key, const std::string& ns) const noexcept {
-	redisCommand("SET", "%s %s", KEY_WITH_NS(key, ns).c_str(), value.c_str());
+void RedisKVStore::setStringValueForKeyInNamespace(const std::string& value, const std::string& key, const std::string& ns) const {
+	auto reply = redisCommand("SET", "%s %s", KEY_WITH_NS(key, ns).c_str(), value.c_str());
+	CHECK_REPLY_STATUS(reply, REDIS_REPLY_STATUS);
 }
 
-std::string RedisKVStore::stringValueForKeyInNamespace(const std::string& key, const std::string& ns) const noexcept {
-	return std::string(redisCommand("GET", "%s", KEY_WITH_NS(key, ns).c_str())->str());
+std::string RedisKVStore::stringValueForKeyInNamespace(const std::string& key, const std::string& ns) const {
+	auto reply = redisCommand("GET", "%s", KEY_WITH_NS(key, ns).c_str());
+	CHECK_REPLY_STATUS(reply, REDIS_REPLY_STRING);
+	return std::string(reply->str());
 }
 
 /* ordered-set value operations */
-void RedisKVStore::addStringValueToSetInNamespace(const std::string& value, const std::string& key, const std::string& ns) const noexcept {
-	redisCommand("SADD", "%s %s", KEY_WITH_NS(key, ns).c_str(), value.c_str());
+void RedisKVStore::addStringValueToSetInNamespace(const std::string& value, const std::string& key, const std::string& ns) const {
+	auto reply = redisCommand("SADD", "%s %s", KEY_WITH_NS(key, ns).c_str(), value.c_str());
+	CHECK_REPLY_STATUS(reply, REDIS_REPLY_INTEGER);
 }
 
-std::vector<std::string> RedisKVStore::stringSetValueForKeyInNamespace(const std::string& key, const std::string& ns) const noexcept{
+std::vector<std::string> RedisKVStore::stringSetValueForKeyInNamespace(const std::string& key, const std::string& ns) const {
 	auto reply = redisCommand("SMEMBERS", "%s", KEY_WITH_NS(key, ns).c_str());
 	std::vector<std::string> result;
-	if(reply->type() != REDIS_REPLY_ARRAY) throw new std::runtime_error("Reply type is not array");
+	CHECK_REPLY_STATUS(reply, REDIS_REPLY_ARRAY);
+
 	logger(LOGLV_INFO)<<"returned array has a size of "<<reply->elements()<<std::endl;
 	for(size_t i=0; i<reply->elements(); i++) {
 		result.push_back(std::string(reply->elementAt(i)->str));
