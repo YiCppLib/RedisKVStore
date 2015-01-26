@@ -22,8 +22,8 @@ namespace YiCppLib {
 			RedisKVStore(RedisKVStore&& rhs);				// move ctor
 			RedisKVStore& operator=(RedisKVStore&& rhs);	// move ctor
 
-			static pointer redisKVStore(const std::string& ip, int port);
-			static pointer redisKVStore(const std::string& unixPath);
+			RedisKVStore(const std::string& ip, int port);
+			RedisKVStore(const std::string& unixPath);
 
 			/* remove key */
 			void removeKeyInNamespace(const std::string& key, const std::string& ns = "") const noexcept;
@@ -38,9 +38,7 @@ namespace YiCppLib {
 
 			
 		private:
-			RedisKVStore(const std::string& ip, int port);
-			RedisKVStore(const std::string& unixPath);
-
+			
 			template<typename ... Types>
 			reply_ptr redisCommand(const std::string& cmd, const std::string& format, Types ... args) const noexcept;
 

@@ -18,6 +18,7 @@ using namespace YiCppLib;
 #endif
 
 static auto logger = LOGGER(LOGLVL);
+
 struct RedisKVStore::Impl {
 	redisContext * rCtx;
 
@@ -80,22 +81,6 @@ RedisKVStore::RedisKVStore(const std::string& unixPath) : pImpl_(new Impl(unixPa
 RedisKVStore::~RedisKVStore() = default;
 RedisKVStore::RedisKVStore(RedisKVStore&& rhs) = default;
 RedisKVStore& RedisKVStore::operator=(RedisKVStore&& rhs) = default;
-
-RedisKVStore::pointer RedisKVStore::redisKVStore(const std::string& ip, int port) {
-#ifdef HAVE_CXX14
-	return std::make_shared<RedisKVStore>(ip, port);
-#else
-	return pointer(new RedisKVStore(ip, port));
-#endif
-}
-
-RedisKVStore::pointer RedisKVStore::redisKVStore(const std::string& unixPath) {
-#ifdef HAVE_CXX14
-	return std::make_shared<RedisKVStore>(unixPath);
-#else
-	return pointer(new RedisKVStore(unixPath));
-#endif
-}
 
 template<typename ... Types>
 RedisKVStore::reply_ptr RedisKVStore::redisCommand(const std::string& cmd, const std::string& format, Types ... args) const noexcept {
