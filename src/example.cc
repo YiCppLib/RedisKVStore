@@ -9,9 +9,9 @@ using namespace YiCppLib;
 
 int main(int argc, char* argv[]) {
 
-	RedisKVStore kvStore("/opt/redis/var/run/redis.sock");
-
 	try{
+
+		RedisKVStore kvStore("/opt/redis/var/run/redis.sock");
 
 		kvStore.setStringValueForKeyInNamespace("1", "0", "first");
 		kvStore.setStringValueForKeyInNamespace("2", "0", "second");

@@ -36,7 +36,6 @@ AC_CONFIG_HEADERS([config.h])
 # Checks for library functions.
 
 AC_CONFIG_FILES([Makefile
-				 vendor/Makefile
                  src/Makefile])
 
 AC_OUTPUT
