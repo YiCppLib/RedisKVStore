@@ -116,6 +116,9 @@ void RedisKVStore::setStringValueForKeyInNamespace(const std::string& value, con
 
 std::string RedisKVStore::stringValueForKeyInNamespace(const std::string& key, const std::string& ns) const {
 	auto reply = redisCommand("GET", "%s", KEY_WITH_NS(key, ns).c_str());
+	if(reply->type() == REDIS_REPLY_NIL)
+		return "";
+
 	CHECK_REPLY_STATUS(reply, REDIS_REPLY_STRING);
 	return std::string(reply->str());
 }
@@ -128,6 +131,10 @@ void RedisKVStore::addStringValueToSetInNamespace(const std::string& value, cons
 
 std::vector<std::string> RedisKVStore::stringSetValueForKeyInNamespace(const std::string& key, const std::string& ns) const {
 	auto reply = redisCommand("SMEMBERS", "%s", KEY_WITH_NS(key, ns).c_str());
+
+	if(reply->type() == REDIS_REPLY_NIL)
+		return std::vector<std::string>();
+
 	std::vector<std::string> result;
 	CHECK_REPLY_STATUS(reply, REDIS_REPLY_ARRAY);
 

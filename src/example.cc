@@ -18,6 +18,9 @@ int main(int argc, char* argv[]) {
 
 		std::cout<<"value for 0 is "<<kvStore.stringValueForKeyInNamespace("0", "first")<<" in ns first"<<std::endl;
 		std::cout<<"value for 0 is "<<kvStore.stringValueForKeyInNamespace("0", "second")<<" in ns second"<<std::endl;
+		std::cout<<"value for 0 is "<<kvStore.stringValueForKeyInNamespace("0", "third")<<" in ns third"<<std::endl;
+
+
 
 		kvStore.removeKeyInNamespace("0", "first");
 		kvStore.removeKeyInNamespace("0", "second");
@@ -31,6 +34,12 @@ int main(int argc, char* argv[]) {
 		std::cout<<"returned size: "<<fruits.size()<<std::endl;
 		for(std::string& f : fruits) {
 			std::cout<<"fruit: "<<f<<std::endl;
+		}
+
+		auto cars = kvStore.stringSetValueForKeyInNamespace("cars");
+		std::cout<<"returned size: "<<cars.size()<<std::endl;
+		for(std::string& c : cars) {
+			std::cout<<"cars: "<<c<<std::endl;
 		}
 
 		kvStore.removeKeyInNamespace("fruit");
